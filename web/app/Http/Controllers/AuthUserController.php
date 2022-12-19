@@ -24,6 +24,9 @@ use Illuminate\Support\Facades\Route;
 
 class AuthUserController extends Controller
 {
+    public function ponka(Request $request){
+        return "ponka";
+    }
     public function index(Request $request){
         $payload = json_decode($request->getContent(), true);
         $session = $request->get('shopifySession'); // Provided by the shopify.auth middleware, guaranteed to be active

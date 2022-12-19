@@ -220,42 +220,42 @@ Route::post('/api/status', [AuthUserController::class, 'status'])->middleware('s
 Route::post('/api/instaRawData', [AuthUserController::class, 'instaRawData'])->middleware('shopify.auth');
 
 
+Route::get('/api/products/count', function (Request $request) {
+    /** @var AuthSession */
+    $session = $request->get('shopifySession'); // Provided by the shopify.auth middleware, guaranteed to be active
+
+    $client = new Rest($session->getShop(), $session->getAccessToken());
+    $result = $client->get('themes');
+    $themes = response($result->getDecodedBody());
+    $mythemes = $themes->original;
+
+    $array      = array();
+    $themeID    = "";
+    $arr_value = '<style>#insta-feed{width:{{section.settings.feed_width}}%;}#insta-feed h2{font-size:{{section.settings.heading_size}}px;</style>
+    {{section.settings.html_area}}
+    {% unless section.settings.html_area contains "instaUser-" %}
+    <div id="insta-feed"></div>
+    {% endunless  %}
+    {%schema%}{"name":"Instafeed App","settings":[{"type":"range","id":"heading_size","min":10,"max":30,"step":1,"unit":"px","label":"Heading Size","default":20},{"type":"range","id":"feed_width","min":50,"max":100,"step":5,"unit":"%","label":"Feed Width","default":100},{"type":"textarea","id":"html_area","label":"Custom Code (optional)"}],"presets":[{"name":"Instafeed App","category":"Instagram Feed"}]}
+    {%endschema%}';
+    foreach ($mythemes as $currTheme) {
+        foreach ($currTheme as $key => $value) {
+            if($value['role'] == 'main'){
+                $themeID = $value['id'];
+                $array = array(
+                    'asset' => array(
+                        'key' => 'sections/insta_section.liquid',
+                        'value' => $arr_value
+                    )
+                );
+            }
+        }
+    }
+    if(!empty($themeID)){
+        $result = $client->put('themes/'.$themeID."/assets",$array);
+        $snippet = response($result->getDecodedBody());
+        return response()->json(["success" => $snippet]);
+    }
 
 
-// Route::post('/api/instaToken', function (Request $request) {
-
-//     /** @var AuthSession */
-//     $session = $request->get('shopifySession'); // Provided by the shopify.auth middleware, guaranteed to be active
-
-//     $success = $code = $error = null;
-
-//     try {
-//         // $url = InstagramAuthBusiness::getAuthURL();
-//         // dd($request);
-//         $getCode = $request->input('code');
-//         // $data = InstagramAuthBusiness::getAccessToken('AQCEUesk--DYBJ1UFdG2xjAdxald5OrLMYR_kEwv7QQ-M3d8y4BmI3mja69syoDH9JH9bsxRyM0fo4Ld_j0XVdrVLmrH_puIb0g8xNoGDmLDDW-Tc3Kg_HdPaM1U2FWN8MkD1WnQgeVJPFztVNHeDggTcvhZlBPL886R1kIpEqy1JNwrx6dDjm5yY572B0wVDKX9XGvaxVugZqd-l9c1GdbsMOFvQgsZsEAfzYkF5UI0nQ#_');
-//         // $access_token = $data->access_token; 
-//         $access_token = 'IGQVJYQUtuM2VUVEdmQURHb0ZAMTkx2OUhqWjcwVW1PQjljUFNtN3dOMmNPWkdyMDNqc182ZAUU5NzVqb2k4UUVEUXNocWpNYmtjVEJHdWlPQU5nMHRRb0ZAXX3kta21IeTN3c0FlU1ZAwLUdCaGVfVXo4cl9KaWc0SDUyemc4'; 
-//         $userData = InstagramAuthBusiness::getUserProfileInfo($access_token,'17841401127337460');
-//         $success = true;
-//         $code = 200;
-//         $error = null;
-//         return response()->json(['message' => "Data Send", 'user_data' => $userData]);
-//     } catch (\Exception $e) {
-//         $success = false;
-//         if ($e instanceof ShopifyProductCreatorException) {
-//             $code = $e->response->getStatusCode();
-//             $error = $e->response->getDecodedBody();
-//             if (array_key_exists("errors", $error)) {
-//                 $error = $error["errors"];
-//             }
-//         } else {
-//             $code = 500;
-//             $error = $e->getMessage();
-//         }
-
-//         Log::error("Failed to create products: $error");
-
-//         throw $e;
-//     }
-// })->middleware('shopify.auth');
+})->middleware('shopify.auth');

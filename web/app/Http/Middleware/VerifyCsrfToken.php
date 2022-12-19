@@ -17,5 +17,6 @@ class VerifyCsrfToken extends Middleware
         'api/instaToken',
         'api/status',
         'api/instaRawData',
+        'api/demo-url',
     ];
 }
